@@ -124,18 +124,17 @@ cld(media_defoliation, Letters = letters)
 cv.model(modelo_reproductive)
 ```
 
-**Tabela 2** - Resultado do teste de Tukey  
+**Tabela 2** - Resultado do teste de Tukey
 
-| Estádio      | 0        | 25       | 50       | 75       | 100      |
-|--------------|----------|----------|----------|----------|----------|
-| floração     | 4,8 Ab   | 3,4 Aa   | 3,5 Aa   | 3,4 Aa   | 2,9 Aa   |
-| capulho      | 4,3 Ab   | 3,8 ABb  | 4,3 Aab  | 3,4 Aab  | 2,7 Aa   |
-| maçãs        | 5,0 Aa   | 5,0 BCa  | 4,2 Aa   | 4,2 Aa   | 4,5 Ba   |
-| botão floral | 4,2 Aa   | 4,7 BCa  | 4,5 Aa   | 4,4 Aa   | 3,9 ABa  |
-| vegetativo   | 4,6 Ab   | 5,1 Cb   | 4,3 Aab  | 4,5 Aab  | 3,2 Aa   |
+| Estádio      | 0      | 25      | 50      | 75      | 100     |
+|--------------|--------|---------|---------|---------|---------|
+| floração     | 4,8 Ab | 3,4 Aa  | 3,5 Aa  | 3,4 Aa  | 2,9 Aa  |
+| capulho      | 4,3 Ab | 3,8 ABb | 4,3 Aab | 3,4 Aab | 2,7 Aa  |
+| maçãs        | 5,0 Aa | 5,0 BCa | 4,2 Aa  | 4,2 Aa  | 4,5 Ba  |
+| botão floral | 4,2 Aa | 4,7 BCa | 4,5 Aa  | 4,4 Aa  | 3,9 ABa |
+| vegetativo   | 4,6 Ab | 5,1 Cb  | 4,3 Aab | 4,5 Aab | 3,2 Aa  |
 
 CV = 24,19
-
 
 Médias seguidas pela mesma letra maiúscula na coluna, e minúscula na linha, não diferem estatisticamente entre si pelo teste de Tukey a 5% de probabilidade.
 
@@ -167,18 +166,17 @@ cld(media_defoliation, Letters = letters)
 cv.model(modelo_bolls)
 ```
 
-**Tabela 3** - Resultado do teste de Tukey  
+**Tabela 3** - Resultado do teste de Tukey
 
-| Estádio      | 0       | 25       | 50       | 75       | 100      |
-|--------------|---------|----------|----------|----------|----------|
-| floração     | 4,7 Ab  | 2,9 Aa   | 2,9 Aa   | 3,0 Aa   | 2,3 ABa  |
-| capulhos     | 4,3 Ac  | 3,5 ABbc | 4,4 Bbc  | 3,1 Ab   | 1,5 Aa   |
-| maçãs        | 5,0 Aa  | 5,0 Ca   | 4,1 ABa  | 4,4 Ba   | 4,5 Da   |
-| botão floral | 4,2 Aa  | 4,7 BCa  | 4,4 Ba   | 4,4 Ba   | 3,6 CDa  |
-| vegetativo   | 4,5 Ab  | 5,0 Cb   | 4,3 Bab  | 4,0 ABab | 3,1 BCa  |
+| Estádio      | 0      | 25       | 50      | 75       | 100     |
+|--------------|--------|----------|---------|----------|---------|
+| floração     | 4,7 Ab | 2,9 Aa   | 2,9 Aa  | 3,0 Aa   | 2,3 ABa |
+| capulhos     | 4,3 Ac | 3,5 ABbc | 4,4 Bbc | 3,1 Ab   | 1,5 Aa  |
+| maçãs        | 5,0 Aa | 5,0 Ca   | 4,1 ABa | 4,4 Ba   | 4,5 Da  |
+| botão floral | 4,2 Aa | 4,7 BCa  | 4,4 Ba  | 4,4 Ba   | 3,6 CDa |
+| vegetativo   | 4,5 Ab | 5,0 Cb   | 4,3 Bab | 4,0 ABab | 3,1 BCa |
 
 CV = 25,19
-
 
 Médias seguidas pela mesma letra maiúscula na coluna, e minúscula na linha, não diferem estatisticamente entre si pelo teste de Tukey a 5% de probabilidade.
 
@@ -346,3 +344,7 @@ ggplot() +
   ) +
   theme_minimal()
 ```
+
+# Conclusão geral
+
+Para todos os níveis de desfolha, em todos os  estádios  fenológicos  do  algodoeiro,  há perda de produtividade à medida que o grau de desfolha se intensifica. As desfolhas realizadas no estádio de início de frutificação resultaram em grandes perdas nos índices de produtividade do algodoeiro a partir de 50% de área foliar reduzida.

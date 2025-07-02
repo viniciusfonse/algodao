@@ -13,6 +13,7 @@ website:
   navbar:
    pinned: true
    background: "#323f45"
+   logo: img/alg.png
    left:
    - text: Sobre
      icon: house
