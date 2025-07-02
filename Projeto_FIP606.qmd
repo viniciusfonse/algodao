@@ -1,0 +1,456 @@
+---
+title: "Análises exploratórias dos dados do experimento"
+author: "Antônia Karine Fernandes, José Neto Rodrigues e Vinícius Fonsêca"
+format: html
+editor: visual
+---
+
+# Pacotes usados
+
+```{r}
+library(agridat) #pacote em que está armazendado o banco de dados que será utilizado
+library(openxlsx) #salvando o banco de dados
+library(DT) #cria tabelas interativas
+library(tidyverse)
+library(skimr)
+library(dplyr)
+library(tidyverse)
+library(gganimate)
+```
+
+# Análises
+
+## Carregando do banco de dados
+
+```{r}
+data(silva.cotton)
+dat <- silva.cotton
+View(dat)
+
+write.xlsx(dat, file = "dat.xlsx")
+
+datatable(dat) #Cria a tabela interativa no arquivo HTML
+```
+
+## Análises exploratórias
+
+### Estrutura geral dos dados
+
+Visualização geral da estrutura dos dados
+
+```{r}
+str(dat)
+summary(dat)
+skimr::skim(dat)
+```
+
+### Histograma de frequências
+
+Usaremos o pacote *tidyverse* (que inclui o *ggplot2*) para visualização de cada variável resposta por meio dos histogramas de frequência
+
+```{r}
+dat_long <- dat |> 
+  pivot_longer(cols = c(height, nodes, reproductive, bolls, weight),
+               names_to = "variavel_resposta",
+               values_to = "valor") #reorganizando os dados para formato longo
+
+# Histogramas + densidade
+ggplot(dat_long, aes(x = valor)) +
+  geom_histogram(aes(y = ..density..), bins = 30, fill = "lightblue", color = "gray30") +
+  geom_density(color = "red") +
+  facet_wrap(~variavel_resposta, scales = "free", ncol = 2) +
+  theme_minimal() +
+  labs(title = "Distribuição das variáveis resposta", x = NULL, y = "Densidade")
+```
+
+### Gráficos BoxPlot
+
+Em seguida, construimos gráficos do tipo boxplot para entender como a desfolha afeta cada variável. As variáveis resposta estarão em função da desfolha, facetando por estágio de desenvolvimento.
+
+```{r}
+dat |> 
+  ggplot(aes(x = as.factor(defoliation), y = height)) +
+  geom_boxplot(outlier.colour = NA) + 
+  geom_jitter(width = 0.1, color = "gray20") +
+  theme_grey() + 
+  labs(x = "Defoliation",
+       y = "Plant height") +
+  facet_wrap(~ stage)
+```
+
+Percebemos que, ao invés de criar um gráfico para cada variável resposta, é mais viável criarmos um gráfico em que cada linha representa uma variável resposta, e cada coluna representa um estágio de desenvolvimento
+
+```{r}
+dat_long <- dat |> 
+  pivot_longer(cols = c(height, nodes, reproductive, bolls, weight),
+               names_to = "variavel_resposta",
+               values_to = "valor") #reorganizando os dados para formato longo
+
+# Gráfico boxplot
+dat_long |> 
+  ggplot(aes(x = as.factor(defoliation), y = valor)) +
+  geom_boxplot(outlier.colour = NA) +
+  geom_jitter(width = 0.1, color = "gray20", alpha = 0.6) +
+  theme_grey() +
+  labs(x = "Defoliation", y = NULL) +
+  facet_grid(rows = vars(variavel_resposta), cols = vars(stage), scales = "free_y") +
+  theme(strip.text = element_text(face = "bold"))
+```
+
+### Linhas de tendência
+
+Agora, plotaremos os gráficos de linhas para cada variável análisada para verificar a tendência dos dados.
+
+Peso médio das maçãs
+
+```{r}
+# Filtrar apenas linhas com valores válidos de 'weight'
+dados_validos <- dat %>%
+  filter(!is.na(weight)) 
+
+#head(dados_validos)
+#str(dados_validos)
+#colnames(dados_validos)
+dados_validos %>%
+  group_by(stage, defoliation)
+
+# Calcular média e erro padrão por stage x defoliation
+dados_summary2 <- dados_validos %>%
+  group_by(stage, defoliation) %>%
+  summarise(
+    mean_weight = mean(weight, na.rm = TRUE),
+    sd_weight = sd(weight, na.rm = TRUE),
+    n = n(),
+    se_weight = sd_weight / sqrt(n)
+  ) %>%
+  ungroup()
+
+# Garantir que defoliation é numérico (caso tenha vindo como string)
+dados_summary2$defoliation <- as.numeric(as.character(dados_summary2$defoliation))
+
+# Plotar o gráfico
+ggplot(dados_summary2, aes(x = defoliation, y = mean_weight, color = stage, group = stage)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  geom_errorbar(aes(ymin = mean_weight - se_weight, ymax = mean_weight + se_weight), width = 5) +
+  labs(
+    title = "Peso médio das estruturas reprodutivas por estádio e desfolha",
+    x = "Desfolha (%)",
+    y = "Peso médio (g)",
+    color = "Estádio"
+  ) +
+  theme_gray() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Gráfico dinâmico
+
+```{r}
+#| warning: false
+#| message: false
+
+# Gráfico base com ajustes de group
+gif <- ggplot(dados_summary2, aes(x = defoliation, y = mean_weight, color = stage, group = stage)) +
+  geom_line(aes(group = stage), size = 1) +
+  geom_point(aes(group = stage), size = 2) +
+  geom_errorbar(aes(ymin = mean_weight - se_weight, ymax = mean_weight + se_weight), width = 5) +
+  labs(
+    title = "Peso médio das estruturas reprodutivas por estádio e desfolha",
+    x = "Desfolha (%)",
+    y = "Peso médio (g)",
+    color = "Estádio"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Animação com transition_reveal
+gif_sev <- gif + transition_reveal(along = defoliation)
+
+# Animação com renderer gifski (mais estável)
+animated_gif <- animate(gif_sev, renderer = gifski_renderer())
+animated_gif
+
+# Salvar o GIF
+anim_save("imgs/gif_sev.gif", animation = animated_gif)
+```
+
+Número de estruturas reprodutivas
+
+```{r}
+# Calcular média e erro padrão por stage x defoliation para 'reproductive'
+dados_summary <- dat %>%
+  group_by(stage, defoliation) %>%
+  summarise(
+    mean_reproductive = mean(reproductive),
+    sd_reproductive = sd(reproductive),
+    n = n(),
+    se_reproductive = sd_reproductive / sqrt(n)
+  ) %>%
+  ungroup()
+
+# Garantir que defoliation é numérico (caso venha como fator/character)
+dados_summary$defoliation <- as.numeric(as.character(dados_summary$defoliation))
+
+# Plotar gráfico para 'reproductive'
+ggplot(dados_summary, aes(x = defoliation, y = mean_reproductive, color = stage, group = stage)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  geom_errorbar(aes(ymin = mean_reproductive - se_reproductive, ymax = mean_reproductive + se_reproductive), width = 5) +
+  labs(
+    title = "Número médio de estruturas reprodutivas por estádio e desfolha",
+    x = "Desfolha (%)",
+    y = "Número médio de estruturas reprodutivas",
+    color = "Estádio"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Gráfico dinâmico
+
+```{r}
+#| warning: false
+#| message: false
+
+# Gráfico base com ajustes de group
+gif <- ggplot(dados_summary, aes(x = defoliation, y = mean_reproductive, color = stage, group = stage)) +
+  geom_line(aes(group = stage), size = 1) +
+  geom_point(aes(group = stage), size = 2) +
+  geom_errorbar(aes(ymin = mean_reproductive - se_reproductive, ymax = mean_reproductive + se_reproductive), width = 5) +
+  labs(
+    title = "Número médio de estruturas reprodutivas por estádio e desfolha",
+    x = "Desfolha (%)",
+    y = "Número médio de estruturas reprodutivas",
+    color = "Estádio"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Animação com transition_reveal
+gif_rep <- gif + transition_reveal(along = defoliation)
+
+# Animação com renderer gifski (mais estável)
+animated_gif2 <- animate(gif_rep, renderer = gifski_renderer())
+animated_gif2
+
+# Salvar o GIF
+anim_save("imgs/gif_rep.gif", animation = animated_gif2)
+```
+
+Número de maçãs
+
+```{r}
+# Calcular média e erro padrão por stage x defoliation para 'bolls'
+dados_summary <- dat %>%
+  group_by(stage, defoliation) %>%
+  summarise(
+    mean_bolls = mean(bolls),
+    sd_bolls = sd(bolls),
+    n = n(),
+    se_bolls = sd_bolls / sqrt(n)
+  ) %>%
+  ungroup()
+
+# Garantir que defoliation é numérico (caso venha como fator/character)
+dados_summary$defoliation <- as.numeric(as.character(dados_summary$defoliation))
+
+# Plotar gráfico para 'bolls'
+ggplot(dados_summary, aes(x = defoliation, y = mean_bolls, color = stage, group = stage)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  geom_errorbar(aes(ymin = mean_bolls - se_bolls, ymax = mean_bolls + se_bolls), width = 5) +
+  labs(
+    title = "Número médio de maçãs por estádio e desfolha",
+    x = "Desfolha (%)",
+    y = "Número médio de maçãs",
+    color = "Estádio"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Gráfico dinâmico
+
+```{r}
+#| warning: false
+#| message: false
+
+# Gráfico base com ajustes de group
+gif <- ggplot(dados_summary, aes(x = defoliation, y = mean_bolls, color = stage, group = stage)) +
+  geom_line(aes(group = stage), size = 1) +
+  geom_point(aes(group = stage), size = 2) +
+  geom_errorbar(aes(ymin = mean_bolls - se_bolls, ymax = mean_bolls + se_bolls), width = 5) +
+  labs(
+    title = "Número médio de maçãs por estádio e desfolha",
+    x = "Desfolha (%)",
+    y = "Número médio de maçãs",
+    color = "Estádio"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Animação com transition_reveal
+gif_bolls <- gif + transition_reveal(along = defoliation)
+
+# Animação com renderer gifski (mais estável)
+animated_gif3 <- animate(gif_bolls, renderer = gifski_renderer())
+animated_gif3
+
+# Salvar o GIF
+anim_save("imgs/gif_bolls.gif", animation = animated_gif3)
+```
+
+Altura da planta
+
+```{r}
+# Calcular média e erro padrão por stage x defoliation para 'height'
+dados_summary <- dat %>%
+  group_by(stage, defoliation) %>%
+  summarise(
+    mean_height = mean(height),
+    sd_height = sd(height),
+    n = n(),
+    se_height = sd_height / sqrt(n)
+  ) %>%
+  ungroup()
+
+# Garantir que defoliation é numérico (caso venha como fator/character)
+dados_summary$defoliation <- as.numeric(as.character(dados_summary$defoliation))
+
+# Plotar gráfico para 'height'
+ggplot(dados_summary, aes(x = defoliation, y = mean_height, color = stage, group = stage)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  geom_errorbar(aes(ymin = mean_height - se_height, ymax = mean_height + se_height), width = 5) +
+  labs(
+    title = "Altura média das plantas por estádio e desfolha",
+    x = "Desfolha (%)",
+    y = "Altura média (cm)",
+    color = "Estádio"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Gráfico dinâmico
+
+```{r}
+#| warning: false
+#| message: false
+
+# Gráfico base com ajustes de group
+gif <- ggplot(dados_summary, aes(x = defoliation, y = mean_height, color = stage, group = stage)) +
+  geom_line(aes(group = stage), size = 1) +
+  geom_point(aes(group = stage), size = 2) +
+  geom_errorbar(aes(ymin = mean_height - se_height, ymax = mean_height + se_height), width = 5) +
+  labs(
+    title = "Altura média das plantas por estádio e desfolha",
+    x = "Desfolha (%)",
+    y = "Altura média (cm)",
+    color = "Estádio"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Animação com transition_reveal
+gif_hei <- gif + transition_reveal(along = defoliation)
+
+# Animação com renderer gifski (mais estável)
+animated_gif4 <- animate(gif_hei, renderer = gifski_renderer())
+animated_gif4
+
+# Salvar o GIF
+anim_save("imgs/gif_height.gif", animation = animated_gif4)
+```
+
+Número de nós
+
+```{r}
+# Calcular média e erro padrão por stage x defoliation para 'nodes'
+dados_summary <- dat %>%
+  group_by(stage, defoliation) %>%
+  summarise(
+    mean_nodes = mean(nodes),
+    sd_nodes = sd(nodes),
+    n = n(),
+    se_nodes = sd_nodes / sqrt(n)
+  ) %>%
+  ungroup()
+
+# Garantir que defoliation é numérico (caso venha como fator/character)
+dados_summary$defoliation <- as.numeric(as.character(dados_summary$defoliation))
+
+# Plotar gráfico para 'nodes'
+ggplot(dados_summary, aes(x = defoliation, y = mean_nodes, color = stage, group = stage)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  geom_errorbar(aes(ymin = mean_nodes - se_nodes, ymax = mean_nodes + se_nodes), width = 5) +
+  labs(
+    title = "Número médio de nós por estádio e desfolha",
+    x = "Desfolha (%)",
+    y = "Número médio de nós",
+    color = "Estádio"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Gráfico dinâmico
+
+```{r}
+#| warning: false
+#| message: false
+
+# Gráfico base com ajustes de group
+gif <- ggplot(dados_summary, aes(x = defoliation, y = mean_nodes, color = stage, group = stage)) +
+  geom_line(aes(group = stage), size = 1) +
+  geom_point(aes(group = stage), size = 2) +
+  geom_errorbar(aes(ymin = mean_nodes - se_nodes, ymax = mean_nodes + se_nodes), width = 5) +
+  labs(
+    title = "Número médio de nós por estádio e desfolha",
+    x = "Desfolha (%)",
+    y = "Número médio de nós",
+    color = "Estádio"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Animação com transition_reveal
+gif_nodes <- gif + transition_reveal(along = defoliation)
+
+# Animação com renderer gifski (mais estável)
+animated_gif5 <- animate(gif_nodes, renderer = gifski_renderer())
+animated_gif5
+
+# Salvar o GIF
+anim_save("imgs/gif_nodes.gif", animation = animated_gif5)
+```
+
+### Gráfico de tendências individuais
+
+```{r}
+# Convertendo as variáveis categóricas
+dat$stage <- as.factor(dat$stage)
+dat$defoliation <- as.factor(dat$defoliation)
+
+dat_long <- dat |>
+  pivot_longer(cols = c(height, nodes, reproductive, bolls, weight),
+               names_to = "variavel_resposta", 
+               values_to = "valor") #reorganizando os dados para formato longo
+
+# Gráfico: número de capulhos por nível de desfolha, colorido por estádio
+ggplot(dat_long, aes(x = defoliation, y = valor)) +
+  geom_jitter(position = position_jitter(width = 0.1), size = 2, alpha = 0.8) +
+  
+  # Linha de tendência ligando as médias por estádio
+  stat_summary(fun = mean, geom = "line", aes(group = 1), color = "red", size = 0.75) +
+  
+  # Pontos de média
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 4, color = "red") +
+  
+  labs(title = NULL,
+       x = "Nível de desfolha", y = NULL) +
+  
+  facet_grid(rows = vars(variavel_resposta), cols = vars(stage), scales = "free_y") +
+  theme_gray()
+```

@@ -1,0 +1,43 @@
+project:
+  type: website
+  output-dir: docs
+  
+execute: 
+  cache: true
+  freeze: auto
+
+website:
+  title: "Impacto de diferentes níveis de desfolha artificial no algodoeiro"
+  favicon: img/algodao.png
+
+  navbar:
+   pinned: true
+   background: "#323f45"
+   left:
+   - text: Sobre
+     icon: house
+     href: about.qmd
+   - text: Análises exploratórias
+     icon: graph-up
+     href: Projeto_FIP606.qmd
+   - text: Análises inferenciais
+     icon: activity
+     href: ultimo.qmd
+
+  page-navigation: true
+  page-footer: 
+    left: "Copyright 2025, Grupo 1"
+    background: "#323f45"
+    
+format:
+  html:
+    fontsize: 1.1em
+    theme: 
+      light: sandstone
+      dark: darkly
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    warning: false
+
+editor: visual

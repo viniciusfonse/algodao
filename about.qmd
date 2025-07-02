@@ -1,0 +1,33 @@
+# Impacto de diferentes níveis de desfolha artificial no algodoeiro
+
+Este site foi criado para hospedar as informações referentes a análise dos dados sobre diferentes níveis de desfolha artificial no algodoeiro, realizada para o trabalho final da disciplina **FIP 606** -- **Análise e visualização de dados em Fitopatologia**, ministrada pelo professor [Emerson Del Ponte](https://emersondelponte.netlify.app/).
+
+## Sobre o banco de dados
+
+O banco de dados analisado é proveniente de um experimento conduzido com plantas de algodão em casa de vegetação. O delineamento foi inteiramente casualizado, com cinco repetições e duas plantas por parcela. Os tratamentos consistiram em cinco níveis de desfolha artificial: 0, 25, 50, 75 e 100%.
+
+As avaliações foram realizadas em cinco estádios de desenvolvimento das plantas: vegetativo, botão floral, floração, formação das maçãs e capulhos. Em cada estádio, foram coletados dados das seguintes variáveis de resposta: número de estruturas reprodutivas, número de maçãs, tamanho das plantas, número de nós e peso das maçãs.
+
+## Objetivo e hipóteses
+
+O objetivo da análise é avaliar o impacto de diferentes níveis de desfolha artificial no desenvolvimento e na produtividade de plantas de algodão ao longo de seus estádios de desenvolvimento. Buscamos compreender:
+
+Quais níveis de desfolha afetam mais intensamente as variáveis de crescimento e produção;
+
+Se há diferenças nas respostas das plantas em diferentes estádios;
+
+E se há interação entre o nível de desfolha e o estádio de desenvolvimento, ou seja, se os efeitos da desfolha variam conforme o momento em que a planta se encontra.
+
+## Hipóteses testadas
+
+Hipótese nula 1 (H0₁): Não há diferença significativa entre os tratamentos. As médias das variáveis de desenvolvimento e produtividade no tratamento controle (sem desfolha) são iguais às dos demais tratamentos (com diferentes níveis de desfolha).
+
+Hipótese alternativa 1 (Ha₁): Pelo menos um dos tratamentos com desfolha apresenta impacto significativamente diferente no desenvolvimento e produtividade das plantas de algodão, em comparação com o tratamento controle.
+
+Hipótese nula 2 (H0₂): O estádio de desenvolvimento das plantas (vegetativo, botão floral, floração, formação das maçãs e capulhos) não influencia significativamente as variáveis de desenvolvimento e produtividade avaliadas.
+
+Hipótese alternativa 2 (Ha₂): Pelo menos um dos estádios de desenvolvimento apresenta diferença significativa nas variáveis de desenvolvimento e produtividade das plantas de algodão.
+
+Hipótese nula 3 (H0₃): Não há interação significativa entre o nível de desfolha e o estádio de desenvolvimento das plantas nas variáveis avaliadas.
+
+Hipótese alternativa 3 (Ha₃): Existe interação significativa entre o nível de desfolha e o estádio de desenvolvimento das plantas, afetando as variáveis de desenvolvimento e produtividade.

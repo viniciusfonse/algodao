@@ -1,0 +1,348 @@
+---
+title: "Análises inferênciais dos dados do experimento"
+author: "Antônia Karine Fernandes, José Neto Rodrigues e Vinícius Fonsêca"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+# Pacotes usados
+
+```{r}
+library(janitor)
+library(car)       # para teste de Levene
+library(emmeans)   # para pós-hoc
+library(multcompView) # para compact letter display no pós-hoc
+library(multcomp)
+library(agricolae)
+library(tidyr)
+library(agridat)
+library(ggplot2)
+library(dplyr)
+```
+
+# Análises inferênciais
+
+## Peso dos capulhos (weight)
+
+```{r}
+data(silva.cotton)
+dat <- silva.cotton
+
+# Remover NAs (apenas na variável weigth)
+dados_anova_weight <- dat |> tidyr::drop_na(weight)
+dados_anova_weight$defoliation <- as.factor(dados_anova_weight$defoliation)
+
+# ANOVA bifatorial (modelo aditivo com interação)
+modelo_weight <- aov(weight ~ stage * defoliation, data = dados_anova_weight)
+
+# Sumário da ANOVA
+summary(modelo_weight)
+
+# Verificação de pressupostos 
+
+# 1. Normalidade dos resíduos
+# p > 0.05 = resíduos normais
+shapiro.test(residuals(modelo_weight)) 
+
+# 2. Homogeneidade de variâncias (Levene)
+# p > 0.05 = variâncias homogêneas
+leveneTest(weight ~ stage * defoliation, data = dados_anova_weight)
+
+#a interação foi significativa, os dados seguiram normalidade e atenderam ao pressuposto de homogeneidade, seguimos então com o teste Tukey de médias. 
+
+#Pós-hoc: teste de Tukey para defoliation (significativo)
+#decompões as médias de cada estádio dentro de desfolha 
+#mostrar as diferenças estatísticas para letras na coluna (maiusculas). 
+media_stage <- emmeans(modelo_weight, ~ stage | defoliation)
+media_stage
+cld(media_stage, Letters = letters)
+
+#Pós-hoc: teste de Tukey para stage (significativo)
+#decompões as médias de cada nivel de desfolha dentro dos estádios 
+#mostrar as diferenças estatísticas para letras na linha (minusculas). 
+media_defoliation <- emmeans(modelo_weight, ~ defoliation | stage)
+media_defoliation
+cld(media_defoliation, Letters = letters)
+
+#para o CV (coeficiente de variação do modelo) da tabela 
+cv.model(modelo_weight)
+```
+
+**Tabela 1** - Resultado do teste de Tukey
+
+| Estádio      | 0        | 25        | 50        | 75         | 100      |
+|--------------|----------|-----------|-----------|------------|----------|
+| Floração     | 28,75 Ac | 21,13 Ab  | 20,70 Ab  | 20,27 Ab   | 13,41 Aa |
+| Capulho      | 28,98 Ac | 26,52 ABc | 28,72 Bbc | 21,93 ABb  | 6,73 Ba  |
+| Maçãs        | 34,18 Ab | 31,13 Bab | 28,45 Bab | 28,55 BCab | 25,35 Ca |
+| Botão floral | 29,14 Ab | 28,86 Bab | 29,57 Bab | 26,57 Cab  | 23,24 Ca |
+| Vegetativo   | 31,73 Ab | 31,74 Bb  | 28,94 Bb  | 29,02 Cb   | 20,88 Ca |
+
+CV = 13,67
+
+Médias seguidas pela mesma letra maiúscula na coluna, e minúscula na linha, não diferem estatisticamente entre si pelo teste de Tukey a 5% de probabilidade.
+
+## Número de capulhos viáveis (variável "reproductive")
+
+```{r}
+# ANOVA bifatorial (modelo aditivo com interação)
+dat$defoliation <- as.factor(dat$defoliation)
+modelo_reproductive <- aov(reproductive ~ stage * defoliation, data = dat)
+
+# Sumário da ANOVA
+summary(modelo_reproductive)
+
+# Verificação de pressupostos
+
+# 1. Normalidade dos resíduos
+# p > 0.05 = resíduos normais
+shapiro.test(residuals(modelo_reproductive)) 
+
+# 2. Homogeneidade de variâncias (Levene)
+# p > 0.05 = variâncias homogêneas
+leveneTest(reproductive ~ stage * defoliation, data = dat)
+
+#a interação foi siguinificativa, os dados não seguiram normalidade, mas atenderam ao pressuposto de homogeneidade, seguimos então com o teste Tukey. 
+
+#Pós-hoc: teste de Tukey para defoliation (significativo)
+#decompões as médias de cada estádio dentro de desfolha 
+#mostrar as diferenças estatísticas para letras na coluna (maiusculas). 
+media_reproductive <- emmeans(modelo_reproductive, ~ stage | defoliation)
+media_reproductive
+cld(media_reproductive, Letters = letters)
+
+#Pós-hoc: teste de Tukey para stage (significativo)
+#decompões as médias de cada nivel de desfolha dentro dos estádios 
+#mostrar as diferenças estatísticas para letras na linha (minusculas). 
+media_defoliation <- emmeans(modelo_reproductive, ~ defoliation | stage)
+media_defoliation
+cld(media_defoliation, Letters = letters)
+
+#para o CV (coeficiente de variação do modelo) da tabela 
+cv.model(modelo_reproductive)
+```
+
+**Tabela 2** - Resultado do teste de Tukey  
+
+| Estádio      | 0        | 25       | 50       | 75       | 100      |
+|--------------|----------|----------|----------|----------|----------|
+| floração     | 4,8 Ab   | 3,4 Aa   | 3,5 Aa   | 3,4 Aa   | 2,9 Aa   |
+| capulho      | 4,3 Ab   | 3,8 ABb  | 4,3 Aab  | 3,4 Aab  | 2,7 Aa   |
+| maçãs        | 5,0 Aa   | 5,0 BCa  | 4,2 Aa   | 4,2 Aa   | 4,5 Ba   |
+| botão floral | 4,2 Aa   | 4,7 BCa  | 4,5 Aa   | 4,4 Aa   | 3,9 ABa  |
+| vegetativo   | 4,6 Ab   | 5,1 Cb   | 4,3 Aab  | 4,5 Aab  | 3,2 Aa   |
+
+CV = 24,19
+
+
+Médias seguidas pela mesma letra maiúscula na coluna, e minúscula na linha, não diferem estatisticamente entre si pelo teste de Tukey a 5% de probabilidade.
+
+## Número de capulhos (Variável "bolls")
+
+```{r}
+modelo_bolls <- aov(bolls ~ stage * defoliation, data = dat)
+summary(modelo_bolls)
+shapiro.test(residuals(modelo_bolls)) 
+leveneTest(bolls ~ stage * defoliation, data = dat) 
+
+#a interação foi siguinificativa, os dados não seguiram normalidade, mas atenderam ao pressuposto de homogeneidade, seguimos então com o teste Tukey. 
+
+#Pós-hoc: teste de Tukey para defoliation (significativo)
+#decompõe as médias de cada estádio dentro de desfolha 
+#mostrar as diferenças estatísticas para letras na coluna (maiusculas). 
+media_bolls <- emmeans(modelo_bolls, ~ stage | defoliation)
+media_bolls 
+cld(media_bolls, Letters = letters)
+
+#Pós-hoc: teste de Tukey para stage (significativo)
+#decompões as médias de cada nivel de desfolha dentro dos estádios 
+#mostrar as diferenças estatísticas para letras na linha (minusculas). 
+media_defoliation <- emmeans(modelo_bolls, ~ defoliation | stage)
+media_defoliation
+cld(media_defoliation, Letters = letters)
+
+#para o CV (coeficiente de variação do modelo) da tabela 
+cv.model(modelo_bolls)
+```
+
+**Tabela 3** - Resultado do teste de Tukey  
+
+| Estádio      | 0       | 25       | 50       | 75       | 100      |
+|--------------|---------|----------|----------|----------|----------|
+| floração     | 4,7 Ab  | 2,9 Aa   | 2,9 Aa   | 3,0 Aa   | 2,3 ABa  |
+| capulhos     | 4,3 Ac  | 3,5 ABbc | 4,4 Bbc  | 3,1 Ab   | 1,5 Aa   |
+| maçãs        | 5,0 Aa  | 5,0 Ca   | 4,1 ABa  | 4,4 Ba   | 4,5 Da   |
+| botão floral | 4,2 Aa  | 4,7 BCa  | 4,4 Ba   | 4,4 Ba   | 3,6 CDa  |
+| vegetativo   | 4,5 Ab  | 5,0 Cb   | 4,3 Bab  | 4,0 ABab | 3,1 BCa  |
+
+CV = 25,19
+
+
+Médias seguidas pela mesma letra maiúscula na coluna, e minúscula na linha, não diferem estatisticamente entre si pelo teste de Tukey a 5% de probabilidade.
+
+## Altura das plantas (cm) (Variável "height")
+
+Análise de regressão utilizada para a variável quantitativa (nível de desfolha).
+
+```{r}
+data(silva.cotton)
+dat <- silva.cotton
+dat$defoliation_num <- as.numeric(as.character(dat$defoliation))
+model <- lm(height ~ defoliation_num + stage, data = dat)
+summary(model)
+
+modelo_interacao <- lm(height ~ defoliation_num * stage, data = dat)
+summary(modelo_interacao)
+anova(model, modelo_interacao) 
+
+#O modelo sem interação é melhor, por ser mais parcimonioso (menos termos) e não ter perda real de explicação da variância.
+
+shapiro.test(residuals(model))
+
+dat$defoliation <- as.factor(dat$defoliation)
+leveneTest(height ~ stage * defoliation, data = dat)
+
+#Apesar da variabilidade da altura ser fortemente explicada pelo estágio de desenvolvimento das plantas, a desfolha apresentou um efeito positivo pequeno mas estatisticamente significativo, independente do estágio. A inclusão da interação entre desfolha e estágio não melhorou o ajuste do modelo, sugerindo que o impacto da desfolha é relativamente constante ao longo dos estágios fenológicos.
+
+# Cores para estágios
+cores_fill <- c(
+  "blossom" = "#CC79A7",
+  "boll" = "#E69F00",
+  "bollopen" = "#56B4E9",
+  "flowerbud" = "#009E73",
+  "vegetative" = "#F0E442"
+)
+
+dat$stage <- factor(dat$stage, levels = names(cores_fill))
+
+# Criar dados para predição
+newdata <- expand.grid(
+  defoliation_num = seq(min(dat$defoliation_num), max(dat$defoliation_num), length.out = 100),
+  stage = levels(dat$stage)
+)
+
+# Extrair coeficientes do modelo
+coef_model <- coef(model)
+
+# Calcular predição manualmente (sem interação)
+newdata$fit <- coef_model["(Intercept)"] + 
+  coef_model["defoliation_num"] * newdata$defoliation_num + 
+  ifelse(newdata$stage == levels(dat$stage)[1], 0,
+         coef_model[paste0("stage", newdata$stage)])
+
+# Plot
+ggplot(dat, aes(x = defoliation_num, y = height, color = stage)) +
+  geom_point(alpha = 0.6) +
+  geom_line(data = newdata, aes(x = defoliation_num, y = fit, color = stage), size = 1) +
+  scale_color_manual(values = cores_fill) +
+  labs(
+    title = "Altura das plantas em função da desfolha e do estádio fenológico",
+    x = "Desfolha (%)",
+    y = "Altura das plantas (cm)",
+    color = "Estádio"
+  ) +
+  theme_minimal()
+```
+
+Já para a análise da variável qualitativa (Estádio de desenvolvimento da planta), utilizaremos o teste Tukey e apresentaremos os resultados por meio de boxplot
+
+```{r}
+emmeans_stage <- emmeans(model, ~ stage)
+letras2 <- cld(emmeans_stage, Letters = letters)
+
+ymax <- max(dat$height, na.rm = TRUE)
+
+ggplot(dat, aes(x = stage, y = height)) +
+  geom_boxplot(fill = "lightgreen", alpha = 0.6, outlier.shape = NA) +
+  geom_jitter(width = 0.1, alpha = 0.3) +
+  geom_text(data = letras2,
+            aes(x = stage, y = ymax + 2, label = .group),
+            size = 5) +
+  labs(
+    x = "Estádio fenológico",
+    y = "Altura da planta (cm)",
+    title = "Altura das plantas em diferentes estádios fenológicos do algodoeiro"
+  ) +
+  theme_minimal()
+```
+
+## Número de nós (Variável "nodes")
+
+```{r}
+data(silva.cotton)
+dat <- silva.cotton
+dat$defoliation_num <- as.numeric(as.character(dat$defoliation))
+
+model <- lm(nodes ~ defoliation_num + stage, data = dat)
+summary(model)
+
+# Remover linhas com NA apenas nas variáveis do modelo
+modelo_df <- dat %>%
+  select(nodes, defoliation_num, stage) %>%
+  drop_na()
+
+# Agora sim o modelo
+modelo_interacao <- lm(nodes ~ defoliation_num * stage, data = modelo_df)
+summary(modelo_interacao)
+anova(model, modelo_interacao) 
+
+#Diferente da variável altura, para o número de nós a interação entre desfolha e estádio fenológico da planta melhora significativamente o modelo.
+
+#O número de nós nas plantas de algodoeiro foi significativamente influenciado tanto pela intensidade de desfolha quanto pelo estádio fenológico. Além disso, a interação entre essas duas variáveis foi estatisticamente significativa, indicando que o efeito da desfolha sobre o número de nós varia entre os estádios — sendo mais acentuado, por exemplo, no estádio de “boll”, onde a resposta à desfolha foi mais positiva.
+
+shapiro.test(residuals(modelo_interacao))
+
+dat$defolha_fator <- as.factor(dat$defoliation_num)
+leveneTest(nodes ~ stage * defolha_fator, data = dat)
+
+# Verifique os níveis mantidos
+levels(modelo_df$stage)
+table(modelo_df$stage)
+
+#As variâncias do número de nós são homogêneas entre os grupos formados pelos níveis de estádio e desfolha (categorias).
+
+# Cores dos estágios
+cores_fill <- c(
+  "blossom" = "#CC79A7",
+  "boll" = "#E69F00",
+  "bollopen" = "#56B4E9",
+  "flowerbud" = "#009E73",
+  "vegetative" = "#F0E442"
+)
+
+# Garantir os fatores com todos os níveis
+modelo_df$stage <- factor(modelo_df$stage, levels = names(cores_fill))
+
+# Criar tabela para predição
+newdata <- expand.grid(
+  defoliation_num = seq(min(modelo_df$defoliation_num), max(modelo_df$defoliation_num), length.out = 100),
+  stage = levels(modelo_df$stage)
+)
+
+# Previsões do modelo com intervalo de confiança
+preds <- predict(modelo_interacao, newdata, interval = "confidence")
+pred_df <- cbind(newdata, preds)
+
+# Garantir fator para cores
+pred_df$stage <- factor(pred_df$stage, levels = names(cores_fill))
+
+# Gráfico com jitter nos pontos
+ggplot() +
+  geom_jitter(data = modelo_df, aes(x = defoliation_num, y = nodes, color = stage),
+              width = 0.3, height = 0.15, alpha = 0.5, size = 2) +
+  geom_line(data = pred_df, aes(x = defoliation_num, y = fit, color = stage), linewidth = 1) +
+  geom_ribbon(data = pred_df, aes(x = defoliation_num, ymin = lwr, ymax = upr, fill = stage), 
+              alpha = 0.3, color = NA) +
+  scale_color_manual(values = cores_fill) +
+  scale_fill_manual(values = cores_fill) +
+  labs(
+    title = "Efeito da desfolha sobre o número de nós por estádio fenológico",
+    x = "Desfolha (%)",
+    y = "Número de nós",
+    color = "Estádio",
+    fill = "Estádio"
+  ) +
+  theme_minimal()
+```
